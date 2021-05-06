@@ -11,7 +11,6 @@ import pylab as plt
 import numpy as np
 import time
 import copy
-import epyestim
 import epyestim.covid19 as covid19
 import pandas as pd
 from datetime import datetime
@@ -72,6 +71,8 @@ def initialise(graph, startingNodes:str, perc:float,plot:bool):
             G.nodes[g]['category'] ='S'
         
     if plot == True:
+        color_map = {'S':'b', 'I':'r', 'R':'g', 'V':'y'}
+        POS = nx.spring_layout(G)
         nx.draw(G, POS, node_color=[color_map[G.nodes[node]['category']] for node in G])
         plt.show()
     return G
@@ -115,11 +116,11 @@ def getVaccine(G, sortedG:list,strategy:str, availability:int):
 
 def lockdownReductions(typeofLD:str):
     if typeofLD=="yellow":
-        return -0.2, -0.1
+        return -0.1, -0.02#-0.1, -0.05#
     elif typeofLD =="orange":
-        return -0.4, -0.15
+        return -0.15, -0.05
     elif typeofLD =="red":
-        return -0.6, -0.2
+        return -0.4, -0.1
     elif typeofLD =="white": #end of LD
         return +0.2, +0.0
     
@@ -178,12 +179,13 @@ def evolution(G_er, model):
     color = 'white'
     cumcolors = [color]
     if model.plot==True:
+        color_map = {'S':'b', 'I':'r', 'R':'g', 'V':'y'}
         POS = nx.spring_layout(G)
         nx.draw(G, pos= POS, node_color=[color_map[G.nodes[node]['category']] for node in G])
         plt.show()
         time.sleep(0.0001)
     while sum(getInfectedNum(G))>0 and iterations < model.maxIt:
-        print(iterations)
+        #print(iterations)
         G_copy = copy.deepcopy(G)
         for g in G.nodes():
             if G_copy.nodes()[g]['category'] == 'S':
@@ -219,17 +221,4 @@ def covidSir(net: Network, Sir: SirModel):
     G_er = initialise(nx.erdos_renyi_graph(net.N,net.p_edges), net.startingNodes, net.percI0,net.plot)
     it, inf, cumav = evolution(G_er, Sir)
     return it, inf, cumav
-    
-    #G_pa = G_pa = nx.barabasi_albert_graph(N,m)
-#POS = nx.spring_layout(G_er)
-#it, inf, av = evolution(initialise(G_er, 'Central', 2/100000,False), p, q,'Central',availability,dailyVaccineIncrease,LD,False)
-
-
-
-
-'''
-noVax = evolution(, p, q,'Central',0,dailyVaccineIncrease,False,False)
-Vax = evolution(initialise(G_er, 'Central', 2/100000,False), p, q,'Central',availability,dailyVaccineIncrease,False,False)
-VaxandLock = evolution(initialise(G_er, 'Central', 2/100000,False), p, q,'Central',availability,dailyVaccineIncrease,LD,False)
-noVaxandLock = evolution(initialise(G_er, 'Central', 2/100000,False), p, q,'Central',0,dailyVaccineIncrease,LD,False)
-'''
+ 
